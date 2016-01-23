@@ -1,0 +1,459 @@
+class Playerstuff
+    def initialize
+    @@stuff=Hash.new
+    @@health = 10
+    @@intelligence=10
+    @@sanity=10
+    @@charisma=10
+    end
+    def healthcheck
+        puts "My Health is #{@@health}"
+    end
+    def add(c)
+      @@stuff[c.name]=c
+  end
+  def remove(c)
+      @@stuff.delete c.name
+  end
+end
+
+class Player
+  def initialize(name,description,location,home)
+    @name=name
+    @description=description
+    @location=location
+    @contents_visible==true
+    @home=home
+  end
+  def look
+    puts "It's me: #{@name}! \n #{@description}"
+  end
+  def look_around
+    @location.look
+  end
+  def location
+    return @location
+  end
+  def name(k)
+    @name = k
+    puts "I'm #{@name}!"
+  end
+  def add(c)
+      @contents[c.name]=c
+  end
+  def home(k)
+      @home = k
+      puts "I'm from #{@home}!"
+  end
+  def remove(c)
+      @contents.delete c.name
+  end
+  def search
+    @contents.each{|k,v| puts "I have a #{k}."}
+    if @contents.length == 0
+      puts "I have nothing!"
+    end
+    end
+    def intro_speech
+        puts "\nYes, how could I have forgotten? I'm #{@name} from #{@home}. \nI'm just waking up now from a terrible nightmare and this...\nThis is not my room.\n"
+    end
+end
+
+class World #A Collection of Rooms
+  def initialize
+    @time=0
+  end
+  def build(r)
+    @rooms=Hash.new
+    @rooms[r.name]=r
+  end
+  def rooms
+    puts @rooms
+  end
+  def pass_time(t)
+    @time = @time + t
+  end
+  def what_time
+    return @time
+  end
+end
+
+class Room
+  def name
+    return @name
+  end
+  def initialize(name,description,light=0)
+    @name=name
+    @description=description
+    @light=light
+    @contents=Hash.new
+    @contents_visible=true
+  end
+  def look
+    puts "#{@name}: \n #{@description}"
+    @contents.each{|k,v| puts "There is a #{k}."
+    if v.contents_visible==true
+      v.list_contents
+    end}
+    if @contents.length == 0
+      puts "It's empty!"
+    end
+  end
+  def pickup(s)
+    if @contents_visible==true
+      @contents.each{|k,v|
+        if s==k
+          v.takeit
+        elsif v.contents_visible==true
+          v.pickup(s)
+        end}
+    end
+  end
+  def search(s)
+    @contents[s].search
+  end
+  def add(c) #Add to Room
+    @contents[c.name]=c
+  end
+  def remove(c) #Remove from Room
+    @contents.delete c.name
+  end
+  def look_at(item)
+    @contents[item].look
+  end
+  def watch(item)
+    @contents[item].watch
+  end
+  def on(item)
+    @contents[item].on
+  end
+  def off(item)
+    @contents[item].off
+  end
+  def take(item,c)
+    @contents[item].take(c)
+  end
+end
+
+#Object Classes
+class Item
+  def initialize(name,description)
+    @name=name
+    @description=description
+    @takeable=false
+    @contents_visible=false
+  end
+  def takeable
+    return @takeable
+  end
+  def look
+    puts "#{@name}: \n #{@description}"
+  end
+  def name
+    return @name
+  end
+  def contents_visible
+    return @contents_visible
+  end
+  def watch
+    puts "You watch it, but nothing happens."
+  end
+  def on
+    puts "I can't turn it on."
+  end
+  def off
+    puts "I can't turn it off."
+  end
+  def pickup(s)
+    if @contents_visible==true
+      @contents.each{|k,v|
+        if s==k
+          v.takeit
+          if v.takeable==true
+              puts "Trying to give to player."
+            @contents.delete(v.name)
+          end
+        end}
+    end
+  end
+  def takeit
+    if @takeable==false
+      puts "I can't take the #{@name}."
+    elsif @takeable==true
+      puts "You take the #{@name}."
+      end
+  end
+  def search
+      puts "There's nothing to search there."
+    end
+end
+
+class Bed<Item
+    def use
+    puts "You fall asleep in the bed.. never to wake."
+    done=true
+    end
+end
+
+class Container<Item
+  def initialize(name,description)
+    @name=name
+    @description=description
+    @contents=Hash.new
+    @contents_visible=false
+    @takeable==false
+  end
+    def search
+    @contents.each{|k,v| puts "It contains a #{k}."}
+    if @contents.length == 0
+      puts "It's empty!"
+    end
+    open
+  end
+  def add(c) #Add to Container
+    @contents[c.name]=c
+  end
+  def remove(c) #Remove from Container
+    @contents.delete c.name
+  end
+  def contents_visible=(cv)
+    @contents_visible=cv
+  end
+  def open
+    @contents_visible=true
+  end
+  def close
+    @contents_visible=false
+  end
+  def look
+    super
+    if
+    @contents_visible==true
+      search
+    end
+  end
+  def list_contents
+    if @contents_visible==true
+      search
+    end
+  end
+  def take(c)
+    @contents.take(c)
+    remove(c)
+  end
+end
+
+class Toggle<Item
+  def initialize(name,description,toggle=false)
+    @name=name
+    @description=description
+    @toggle = toggle
+  end
+  def on
+    @toggle=true
+  end
+  def off
+    @toggle=false
+  end
+  def status
+    return @toggle
+  end
+end
+
+class Light<Toggle
+  def look
+    if @toggle==true
+      puts @description + "The light is shining."
+    else
+      puts @description + "The light is off."
+    end
+  end
+end
+
+class Lamp<Toggle
+  def look
+    if @toggle==true
+      puts @description + "The lamp is shninig."
+    else
+      puts @description + "The lamp is off."
+    end
+  end
+end
+
+class Fan<Toggle
+  def look
+    if @toggle==true
+      puts @description + " The fan whirls gently."
+    else
+      puts @description + " The fan is off."
+    end
+  end
+end
+
+class Tv<Toggle
+  def look
+    if @toggle==true
+      puts @description + " The television is blaring."
+    else
+      puts @description + " The television is off."
+    end
+  end
+  def watch
+    on
+    puts "You watch the television for a while."
+  end
+end
+
+class Takeable<Item
+  def initialize(name,description)
+    @name=name
+    @description=description
+    @takeable=true
+  end
+  def take
+    puts "You took the #{@name}."
+  end
+end
+
+#Build All Sub Items
+first_room_dresser_book=Takeable.new("Guide","An old book, it appears well-used.")
+first_room_dresser_shirt=Takeable.new("Shirt","A neatly folded shirt, in your favorite color.")
+first_room_dresser_pants=Takeable.new("Pants","A neatly folded pair of pants. They are just your size, too.")
+first_room_dresser_hat=Takeable.new("Hat", "A sporty hat which matches your eyes.")
+first_room_dresser_socks=Takeable.new("Socks", "Knit socks which will look lovely on your feet.")
+first_room_endtable_number=Takeable.new("Number","A handwritten note with a phone number, it only has 6 digits.")
+first_room_endtable_pills=Takeable.new("Pills","A bottle of pills, the label has been removed.")
+first_room_endtable_taxlaw=Takeable.new("Taxes", "A tax law textbook from a few years ago.")
+
+
+#Build All Items
+
+#First Room Items
+first_room_dresser=Container.new("Dresser","An old dresser with four drawers")
+first_room_light=Light.new("Light", "A single uncovered bulb overhead. ")
+first_room_tv=Tv.new("Tv", "An old television set.")
+first_room_lamp=Lamp.new("Lamp", "An old lamp with a pale shade.")
+first_room_bin=Container.new("Bin", "A small waste bin.")
+first_room_rug=Item.new("Rug", "A small, drab, rug is on the floor.")
+first_room_desk=Container.new("Desk", "A small, professional desk.")
+first_room_endtable=Container.new("Endtable", "A small wooden endtable stands next to the bed.")
+first_room_mirror=Item.new("Mirror", "It's me!")
+first_room_fan=Fan.new("Fan", "A dusty fan hangs from the ceiling.")
+first_room_painting=Item.new("Painting", "Art!")
+first_room_closet=Container.new("Closet", "The closet does not seem like it's been used recently.")
+first_room_bed=Bed.new("Bed","The bed you first woke up in.")
+#Second Room Items
+second_room_dresser=Container.new("Dresser","An old dresser with two drawers")
+second_room_light=Light.new("Light","A single uncovered bulb overhead.")
+second_room_lamp=Lamp.new("Lamp","An old lamp with a pale shade.")
+second_room_rug=Item.new("Rug","A small, drab, rug is on the floor.")
+second_room_closet=Container.new("Closet","The closet does not seem like it's been used recently.")
+second_room_painting=Item.new("Painting","Art!")
+second_room_tv=Tv.new("Tv","An old television set.")
+second_room_endtable=Container.new("Endtable","A small wooden endtable stands next to the bed.")
+second_room_bed=("Bed","A neatly made bed with a thin layer of dust on the covers.")
+
+#Put Sub Items in Items
+first_room_dresser.add(first_room_dresser_book)
+first_room_dresser.add(first_room_dresser_shirt)
+first_room_dresser.add(first_room_dresser_pants)
+first_room_dresser.add(first_room_dresser_hat)
+first_room_dresser.add(first_room_dresser_socks)
+first_room_endtable.add(first_room_endtable_number)
+first_room_endtable.add(first_room_endtable_pills)
+first_room_endtable.add(first_room_endtable_taxlaw)
+
+#Build All Rooms
+first_room=Room.new("Room","A bedroom, the off-white paint feels emotionless.",light=30)
+second_room=Room.new("Bedroom","A bedroom, the light blue paint feels soothing.",light=30)
+first_hall=Room.new("Hall","A narrow hallway with doors on two sides, a staircase leads down.")
+
+#Put All Items in Rooms
+first_room.add(first_room_dresser)
+first_room.add(first_room_light)
+first_room.add(first_room_tv)
+first_room.add(first_room_lamp)
+first_room.add(first_room_bin)
+first_room.add(first_room_rug)
+first_room.add(first_room_desk)
+first_room.add(first_room_endtable)
+first_room.add(first_room_mirror)
+first_room.add(first_room_fan)
+first_room.add(first_room_painting)
+first_room.add(first_room_closet)
+first_room.add(first_room_bed)
+
+second_room.add(second_room_dresser)
+second_room.add(second_room_light)
+second_room.add(second_room_lamp)
+second_room.add(second_room_rug)
+second_room.add(second_room_closet)
+second_room.add(second_room_painting)
+second_room.add(second_room_tv)
+second_room.add(second_room_endtable)
+second_room.add(second_room_bed)
+
+#Build All Areas
+
+#Put All Rooms in Areas
+
+#Put Areas in World
+world=World.new
+world.build(first_room)
+world.build(seoncd_room)
+world.build(first_hall)
+
+#Make Me
+player=Player.new("Robb","It's always been you!",first_room,"Home!")
+
+#StartScreen
+puts "Awake"
+puts "Created by Robb Thomas"
+puts "Version: Alpha 0.0.2"
+puts "\n Every command during game play will consist of two words. The action and the target. To view your current location type 'Look Around'. \n To view your inventory type 'Search Me'."
+puts "Now, what is your name?"
+name=gets.chomp
+player.name(name)
+puts "Where are you from?"
+home=gets.chomp
+player.home(home)
+
+player.intro_speech
+player.look_around
+
+done=false
+while
+done==false
+  puts "What will you do? (On, Off, Look, Search, Take, Watch, Open, Close, Drop)"
+  action=gets.chomp
+  words = action.split
+  case words[0].downcase
+    when "look"
+      if words[1].downcase=="around"
+        player.location.look
+      else
+        player.location.look_at(words[1].capitalize)
+      end
+    when "take"
+      player.location.pickup(words[1].capitalize)
+    when "drop"
+      puts "I can't drop!"
+    when "search"
+      if words [1].downcase=="me"
+        player.search
+      else
+        player.location.search(words[1].capitalize)
+      end
+      when "open"
+      puts "I can't open!"
+    when "close"
+      puts "I can't close!"
+    when "on"
+      player.location.on(words[1].capitalize)
+    when "off"
+      player.location.off(words[1].capitalize)
+    when "watch"
+      player.location.watch(words[1].capitalize)
+  end
+end
+#To update time world.pass_time(t)
